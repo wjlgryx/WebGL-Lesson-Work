@@ -1,0 +1,10 @@
+WebGL-Lesson-Work
+ -F1LT3R
+
+Just a quick repository containing my lesson work as I follow:
+http://learningwebgl.com/lessons
+
+There's nothing new or special to see here. However, I have attempted to use
+JavaScript best practices in my code, whereas the original lessons use
+depricated methods such as "body.onload".
+
