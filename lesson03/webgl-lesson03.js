@@ -12,13 +12,61 @@
       triangleVertexPositionBuffer,
       triangleVertexColorBuffer,
       squareVertexPositionBuffer,
-      squareVertexColorBuffer;
+      squareVertexColorBufferm,
+      rTri          = 0,
+      rSquare       = 0,
+      lastTime      = 0,
+      mvMatrixStack  = []
   ;
- 
+
+  function animate() {
+    var timeNow = + new Date(),
+        elapsed;
+        
+    if( lastTime != 0 ){
+      elapsed  = timeNow - lastTime;
+      rTri    += (90 * elapsed) / 1000;
+      rSquare += (75 * elapsed) / 1000;
+    }
+    
+    lastTime = timeNow;
+  };
+
+  function tick(){
+    drawScene();
+    animate();
+  };
+
+  function tick() {
+    drawScene();
+    animate();
+  }
+
+  function mvPushMatrix( m ){
+    if( m ){
+      mvMatrixStack.push( m.dup() );
+      mvMatrix = m.dup();
+    }else{
+      mvMatrixStack.push( mvMatrix.dup() );
+    }
+  };
+
+  function mvPopMatrix() {
+    if( mvMatrixStack.length == 0 ){
+      throw "Invalid popMatrix!";
+    }
+    mvMatrix = mvMatrixStack.pop();
+    return mvMatrix;
+  }; 
   function loadIdentity(){
     mvMatrix = Matrix.I( 4 );
   };
  
+  function mvRotate( ang, v ){
+    var arad = ang * Math.PI / 180;
+    var m = Matrix.Rotation( arad, $V([ v[0], v[1], v[2] ]) ).ensure4x4();
+    multMatrix( m );
+  };
  
   function multMatrix( m ){
      mvMatrix = mvMatrix.x( m );
@@ -152,7 +200,7 @@
   // Initializes the WebGL Context and sets the drawScene Interval
   function webGLStart() {
     
-    var canvas = document.getElementById( "lesson01-canvas" );
+    var canvas = document.getElementById( "lesson03-canvas" );
     
     initGL( canvas );
     initShaders();
@@ -164,7 +212,7 @@
     gl.enable( gl.DEPTH_TEST )
     gl.depthFunc( gl.LEQUAL );
 
-    setInterval( drawScene, 100 );
+    setInterval( tick, 15 );
 
   };
 
@@ -273,43 +321,54 @@
     // Multiply the model-view matrix by a translation matrix
     mvTranslate([-1.5, 0.0, -7.0]);
 
-    // Specify the current buffer (load the triangle buffer for operation)
-    gl.bindBuffer( gl.ARRAY_BUFFER, triangleVertexPositionBuffer );
-    
-    // Tell WebGL to read vertex positions from the triangle buffer
-    gl.vertexAttribPointer( shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0 );
+    mvPushMatrix();
+      
+      mvRotate(rTri, [0, 1, 0]);
 
-    // Tell WebGL to read color data from the triangle color buffer
-    gl.bindBuffer( gl.ARRAY_BUFFER, triangleVertexColorBuffer );
-    gl.vertexAttribPointer( shaderProgram.vertexColorAttribute, triangleVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0 );
+      // Specify the current buffer (load the triangle buffer for operation)
+      gl.bindBuffer( gl.ARRAY_BUFFER, triangleVertexPositionBuffer );
+      
+      // Tell WebGL to read vertex positions from the triangle buffer
+      gl.vertexAttribPointer( shaderProgram.vertexPositionAttribute, triangleVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0 );
 
-    // Apply model-view matrix on graphics card
-    setMatrixUniforms();
+      // Tell WebGL to read color data from the triangle color buffer
+      gl.bindBuffer( gl.ARRAY_BUFFER, triangleVertexColorBuffer );
+      gl.vertexAttribPointer( shaderProgram.vertexColorAttribute, triangleVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0 );
 
-    // Draw the array of vertices given earlier for the triangle shape, starting at the 0th item and ending on numItems
-    gl.drawArrays( gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems );
+      // Apply model-view matrix on graphics card
+      setMatrixUniforms();
 
+      // Draw the array of vertices given earlier for the triangle shape, starting at the 0th item and ending on numItems
+      gl.drawArrays( gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems );
+
+    mvPopMatrix();
 
     // SQUARE //////////////////////////////////////////////////////////////
 
     // Multiply the model-view matrix by a translation matrix
-    mvTranslate([3.0, 0.0, 0.0])
+    mvTranslate([ 3.0, 0.0, 0.0 ])
 
-    // Specify the current buffer (load the square buffer for operation)
-    gl.bindBuffer( gl.ARRAY_BUFFER, squareVertexPositionBuffer );
-
-    // Tell WebGL to read vertex positions from the triangle buffer
-    gl.vertexAttribPointer( shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0 );
-
-    // Tell WebGL to read color data from the triangle color buffer
-    gl.bindBuffer( gl.ARRAY_BUFFER, squareVertexColorBuffer );
-    gl.vertexAttribPointer( shaderProgram.vertexColorAttribute, squareVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0 );
-
-    // Apply model-view matrix on graphics card
-    setMatrixUniforms();
+    mvPushMatrix();
     
-    // Draw the array of vertices given earlier for the square shape, starting at the 0th item and ending on numItems
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems );
+      mvRotate( rSquare, [1, 0, 0] );
+      
+      // Specify the current buffer (load the square buffer for operation)
+      gl.bindBuffer( gl.ARRAY_BUFFER, squareVertexPositionBuffer );
+
+      // Tell WebGL to read vertex positions from the triangle buffer
+      gl.vertexAttribPointer( shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0 );
+
+      // Tell WebGL to read color data from the triangle color buffer
+      gl.bindBuffer( gl.ARRAY_BUFFER, squareVertexColorBuffer );
+      gl.vertexAttribPointer( shaderProgram.vertexColorAttribute, squareVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0 );
+
+      // Apply model-view matrix on graphics card
+      setMatrixUniforms();
+      
+      // Draw the array of vertices given earlier for the square shape, starting at the 0th item and ending on numItems
+      gl.drawArrays( gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems );
+    
+    mvPopMatrix();
   
   };
 
